@@ -16,11 +16,12 @@ import scipy.sparse as sp
 feat_file_name = "./feature_map.txt"
 
 feature_index = {}  #numeric index to name
-inverted_feature_index = {} #name to numeric index
+# inverted_feature_index = {} #name to numeric index
 network = nx.Graph()
 ego_nodes = []
 
 def parse_featname_line(line):
+    # 从*.featnames文件中建立{index:name}特征字典
     line = line[line.find(' ')+1:]  # chop first field
     split = line.split(';')
     name = ';'.join(split[:-1]) # feature name
@@ -52,7 +53,7 @@ def load_features():
         
     # index built, read it in (even if we just built it by scanning)
     global feature_index
-    global inverted_feature_index
+    # global inverted_feature_index
     with open(feat_file_name, 'r') as index_file:
         for line in index_file:
             split = line.strip().split(' ')
@@ -60,9 +61,9 @@ def load_features():
             val = split[1]
             feature_index[key] = val
 
-    for key in feature_index.keys():
-        val = feature_index[key]
-        inverted_feature_index[val] = key
+    # for key in feature_index.keys():
+    #     val = feature_index[key]
+    #     inverted_feature_index[val] = key
 
 def load_nodes():
     assert len(feature_index) > 0, "call load_features() first"
@@ -70,15 +71,16 @@ def load_nodes():
     global ego_nodes
 
     # get all the node ids by looking at the files
+    # ego_nodes = [0, 107, 1684, 1912, 3437, 348, 3980, 414, 686, 698]
     ego_nodes = [int(x.split("\\")[-1].split('.')[0]) for x in glob.glob("./facebook/*.featnames")]
     node_ids = ego_nodes
 
     # parse each node
     for node_id in node_ids:
-        featname_file = open("./facebook/%d.featnames" % (node_id,), 'r')
-        feat_file     = open("./facebook/%d.feat"      % (node_id,), 'r')
-        egofeat_file  = open("./facebook/%d.egofeat"   % (node_id,), 'r')
-        edge_file     = open("./facebook/%d.edges"     % (node_id,), 'r')
+        featname_file = open("./facebook/%d.featnames" % (node_id,), 'r') # 特征名称
+        feat_file     = open("./facebook/%d.feat"      % (node_id,), 'r') # 节点特征
+        egofeat_file  = open("./facebook/%d.egofeat"   % (node_id,), 'r') # ego特征
+        edge_file     = open("./facebook/%d.edges"     % (node_id,), 'r') # 边表
 
         # 0 1 0 0 0 ...
         ego_features = [int(x) for x in egofeat_file.readline().split(' ')]
@@ -86,13 +88,14 @@ def load_nodes():
         # Add ego node if not already contained in network
         if not network.has_node(node_id):
             network.add_node(node_id)
-            network.nodes[node_id]['features'] = np.zeros(len(feature_index))
+            network.nodes[node_id]['features'] = np.zeros(len(feature_index)) # 先设置为0
         
         # parse ego node
         i = 0
         for line in featname_file:
             key, val = parse_featname_line(line)
             # Update feature value if necessary
+            # Why? 目前看来是将特征值0变为1，特征值1变为2
             if ego_features[i] + 1 > network.nodes[node_id]['features'][key]:
                 network.nodes[node_id]['features'][key] = ego_features[i] + 1
             i += 1
@@ -101,8 +104,8 @@ def load_nodes():
         for line in feat_file:
             featname_file.seek(0)
             split = [int(x) for x in line.split(' ')]
-            node_id = split[0]
-            features = split[1:]
+            node_id = split[0] # ID
+            features = split[1:] # 特征
 
             # Add node if not already contained in network
             if not network.has_node(node_id):
@@ -113,6 +116,7 @@ def load_nodes():
             for line in featname_file:
                 key, val = parse_featname_line(line)
                 # Update feature value if necessary
+                # Why? 目前看来是将特征值0变为1，特征值1变为2
                 if features[i] + 1 > network.nodes[node_id]['features'][key]:
                     network.nodes[node_id]['features'][key] = features[i] + 1
                 i += 1
@@ -125,7 +129,7 @@ def load_nodes():
 def load_edges():
     global network
     assert network.order() > 0, "call load_nodes() first"
-    edge_file = open("./facebook_combined.txt","r")
+    edge_file = open("./facebook_combined.txt","r") # 边表文件
     for line in edge_file:
         # nodefrom nodeto
         split = [int(x) for x in line.split(" ")]
@@ -138,9 +142,9 @@ def load_network():
     Load the network.  
     After calling this function, facebook.network points to a networkx object for the facebook data.
     """
-    load_features()
-    load_nodes()
-    load_edges()
+    load_features() # 加载特征
+    load_nodes() # 加载节点
+    load_edges() # 加载边
 
 def feature_matrix():
     n_nodes = network.number_of_nodes()
@@ -152,12 +156,12 @@ def feature_matrix():
 
     return X
 
-def universal_feature(feature_index):
-    """
-    Does every node have this feature?
+# def universal_feature(feature_index):
+#     """
+#     Does every node have this feature?
 
-    """
-    return len([x for x in network.nodes_iter() if network.nodes[x]['feautures'][feature_index] > 0]) // network.order() == 1
+#     """
+#     return len([x for x in network.nodes_iter() if network.nodes[x]['feautures'][feature_index] > 0]) // network.order() == 1
 
 if __name__ == '__main__':
     # print "Running tests."

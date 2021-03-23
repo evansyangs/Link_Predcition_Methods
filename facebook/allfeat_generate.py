@@ -1,4 +1,6 @@
 # 生成allfeat文件
+# 即将中心节点ego的特征.egofeat和其它节点的特征.feat合并到一起
+# id | feature
 
 import numpy as np
 import os
@@ -18,7 +20,7 @@ for egofeat_file in egofeat_files:
                              np.loadtxt(DATA_DIR+idx+'.feat'),axis=0).astype(int)  # 类型为整型
 
     # 存储数据
-    np.savetxt(DATA_DIR+idx+'.allfeat',allfeat, fmt='%i') # 保存为整型
+    np.savetxt(DATA_DIR+idx+'.allfeat',allfeat, fmt='%i') # 保存为整型（取值仅为0、1）
     print(idx+'.allfeat saved!')
 
 

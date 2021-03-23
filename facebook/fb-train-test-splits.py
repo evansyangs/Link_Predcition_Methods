@@ -37,8 +37,8 @@ TRAIN_TEST_SPLITS_FOLDER = './train-test-splits/'
 
 # Iterate over fractions of edges to hide
 for frac_hidden in FRAC_EDGES_HIDDEN:
-    val_frac = 0.1
-    test_frac = frac_hidden - val_frac
+    val_frac = 0.1 # 验证集
+    test_frac = frac_hidden - val_frac # 测试集
     
     # Iterate over each graph
     for g_name, graph_tuple in fb_graphs.items():
